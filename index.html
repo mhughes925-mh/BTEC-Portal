@@ -1,27 +1,82 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>St Ciaran's College | BTEC Portal</title>
-<style>:root{font-family:system-ui,Segoe UI,Arial,sans-serif;color:#193552;background:#eef4fa}*{box-sizing:border-box}body{margin:0}header{background:#123c70;color:white;padding:22px max(20px,calc((100% - 900px)/2))}.brand{display:flex;align-items:center;gap:18px}.brand img{width:84px;background:white;border-radius:10px;padding:5px}.brand h1{font-size:23px;margin:0 0 6px}main{max-width:620px;margin:36px auto;padding:0 18px}.card{background:white;border:1px solid #d5e3ef;border-radius:14px;padding:26px;box-shadow:0 4px 16px #183e6610}h2{margin-top:0}label{display:block;font-weight:600;margin:18px 0 7px}input{width:100%;padding:12px;border:1px solid #a9bfd4;border-radius:8px;font:inherit}button{margin-top:16px;padding:12px 18px;background:#1760a6;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.muted{color:#597086;font-size:14px;line-height:1.5}.notice{background:#fff4d7;border-left:4px solid #c69224;padding:12px;margin-bottom:18px}.status{margin-top:16px;white-space:pre-wrap}.error{color:#a32836}.success{color:#126a46}.hidden{display:none}footer{text-align:center;color:#597086;font-size:12px;margin:30px 12px}</style></head>
-<body><header><div class="brand"><img src="school-crest.png" alt="St Ciaran's College crest"><div><h1>St Ciaran's College</h1><div>BTEC Quality Assurance Portal</div></div></div></header>
-<main><div class="notice"><strong>Login testing only.</strong> Department access and activity records are not connected yet. Do not enter real staff or student information.</div>
-<section id="setup" class="card hidden"><h2>Connection required</h2><p>This website needs its Supabase project URL and publishable (or legacy anon) key added to the configuration in <code>index.html</code>.</p><p class="muted">Never add a secret key or service_role key to a public website.</p></section>
-<section id="login" class="card hidden"><h2>Staff email login</h2><p class="muted">Enter the email address approved by the Quality Nominee. We'll email you a secure sign-in link. No password is needed.</p><form id="login-form"><label for="email">School email address</label><input id="email" type="email" autocomplete="email" placeholder="name@school.org" required><button id="send" type="submit">Send secure login link</button></form><p id="message" class="status" role="status" aria-live="polite"></p></section>
-<section id="signed-in" class="card hidden"><h2>You're signed in</h2><p id="signed-email"></p><p class="muted">Your email login works. The departmental dashboard will be enabled after database permissions and activity storage are configured and tested.</p><button id="sign-out">Sign out</button><p id="out-message" class="status" role="status"></p></section>
-</main><footer>St Ciaran's College BTEC Portal · Authentication test version</footer>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-// REPLACE THESE TWO VALUES WITH YOUR OWN SUPABASE PROJECT DETAILS.
-const SUPABASE_URL = 'https://zlarewxztujnvhvcmodx.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ghVPyx2XNY550p2UHHgRAA_3Hvo97u0';
-const $ = id => document.getElementById(id);
-const show = id => { for(const x of ['setup','login','signed-in']) $(x).classList.toggle('hidden',x!==id); };
-const ready = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('PASTE_') && !SUPABASE_PUBLISHABLE_KEY.includes('PASTE_');
-if(!ready){show('setup');}else{
- const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{flowType:'implicit',detectSessionInUrl:true}});
- const setSession = session => {if(session?.user){$('signed-email').textContent='Signed in as: '+(session.user.email||'staff member');show('signed-in');}else{show('login');}};
- const {data:{session}}=await supabase.auth.getSession();
- if(!$('message').classList.contains('error'))setSession(session);
- supabase.auth.onAuthStateChange((_event,session)=>{if(!$('message').classList.contains('error'))setSession(session);});
- $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('send').disabled=true;$('message').textContent='Sending your login link…';$('message').className='status';const {error}=await supabase.auth.signInWithOtp({email:$('email').value.trim(),options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});$('send').disabled=false;$('message').textContent=error?'Could not send login link: '+error.message:'If this email has an approved account, a login link will arrive shortly. Check your junk folder too.';$('message').className='status '+(error?'error':'success');});
- $('sign-out').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){$('out-message').textContent=error.message;}else{$('message').textContent='';$('message').className='status';setSession(null);}});
+<style>
+:root{font-family:system-ui,Segoe UI,Arial,sans-serif;color:#193552;background:#eef4fa}*{box-sizing:border-box}body{margin:0}header{background:#123c70;color:white;padding:20px max(18px,calc((100% - 1050px)/2))}.brand{display:flex;align-items:center;gap:16px}.brand img{width:76px;background:white;border-radius:9px;padding:4px}.brand h1{font-size:23px;margin:0 0 5px}main{max-width:1050px;margin:26px auto;padding:0 18px}.card{background:white;border:1px solid #d5e3ef;border-radius:12px;padding:22px;margin-bottom:16px;box-shadow:0 4px 16px #183e6610}h2{margin:0 0 12px}h3{margin:0 0 10px}label{display:block;font-weight:600;margin:12px 0 5px}input,select,textarea{width:100%;padding:10px;border:1px solid #a9bfd4;border-radius:7px;font:inherit}textarea{min-height:85px}button{padding:10px 14px;background:#1760a6;color:white;border:0;border-radius:7px;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e4edf6;color:#123c70}.muted{color:#597086;font-size:14px;line-height:1.5}.notice{background:#fff4d7;border-left:4px solid #c69224;padding:12px;margin-bottom:18px}.status{white-space:pre-wrap}.error{color:#a32836}.success{color:#126a46}.hidden{display:none!important}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.grid.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.task{border:1px solid #d9e5ef;border-radius:9px;padding:14px;margin:10px 0}.task-head{display:flex;align-items:start;gap:10px}.task-head input{width:20px;height:20px;margin:3px 0}.task-head strong{flex:1}.task textarea{margin-top:9px;min-height:60px}.pill{display:inline-block;background:#e4edf6;border-radius:20px;padding:3px 10px;font-size:12px}.small{font-size:12px;color:#597086}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}.stat{font-size:28px;font-weight:700}footer{text-align:center;color:#597086;font-size:12px;margin:24px}.spacer{height:8px}
+</style></head><body>
+<header><div class="brand"><img src="school-crest.png" alt="St Ciaran's College crest"><div><h1>St Ciaran's College</h1><div>BTEC Quality Assurance Portal</div></div></div></header>
+<main><div class="notice"><strong>Testing phase:</strong> Use fictional activities only. Do not invite real staff or enter personal/student information until department permissions and completion auditing are fully tested and approved by the school.</div>
+<section id="setup" class="card hidden"><h2>Supabase configuration needed</h2><p>Add your API URL and publishable key to <code>config.js</code>, then upload it alongside this page. Never use a secret or service_role key.</p></section>
+<section id="login" class="card hidden"><h2>Staff email login</h2><p class="muted">Enter your approved school email address to receive a secure sign-in link. No password needed.</p><form id="login-form"><label for="email">School email address</label><input id="email" type="email" autocomplete="email" required placeholder="name@school.org"><div class="spacer"></div><button id="send" type="submit">Send secure login link</button></form><p id="login-message" class="status" role="status"></p></section>
+<section id="app" class="hidden">
+<div class="card bar"><div><strong id="who"></strong><div class="muted" id="role"></div></div><button class="secondary" id="sign-out">Sign out</button></div>
+<div id="not-approved" class="card hidden"><h2>Account not yet authorised</h2><p>Your email sign-in worked, but there is no authorised staff profile for this account. Contact the Quality Nominee.</p></div>
+<div id="dashboard" class="hidden">
+<div class="grid"><div class="card"><div class="muted">Total activities</div><div id="total" class="stat">0</div></div><div class="card"><div class="muted">Outstanding</div><div id="outstanding" class="stat">0</div></div><div class="card"><div class="muted">Completed</div><div id="completed" class="stat">0</div></div></div>
+<div class="card"><div class="bar"><h2>Department activities</h2><button id="refresh" class="secondary">Refresh</button></div><label for="department-filter">Department</label><select id="department-filter"></select><label for="status-filter">Status</label><select id="status-filter"><option value="all">All activities</option><option value="outstanding">Outstanding</option><option value="completed">Completed</option></select><p id="activity-message" class="status" role="status"></p><div id="activity-list"></div></div>
+<section id="admin" class="card hidden"><h2>Add BTEC activity</h2><p class="muted">Quality Nominee only. New activities will appear on the selected department's dashboard.</p><form id="add-form"><div class="grid two"><div><label for="add-department">Department</label><select id="add-department" required></select></div><div><label for="add-title">Activity title</label><input id="add-title" maxlength="200" required placeholder="e.g. Upload digital assessment plan"></div></div><label for="add-description">Instructions (optional)</label><textarea id="add-description" maxlength="3000"></textarea><label for="add-date">Deadline (optional)</label><input id="add-date" type="date"><div class="spacer"></div><button id="add-button" type="submit">Save activity</button></form><p id="add-message" class="status" role="status"></p></section>
+</div></section></main><footer>St Ciaran's College · BTEC Quality Assurance Portal · Testing version</footer>
+<script src="config.js"></script><script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const $=id=>document.getElementById(id), cfg=window.BTEC_CONFIG||{};
+const configured=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(cfg.url||'') && !!cfg.publishableKey && !cfg.publishableKey.includes('PASTE_');
+const toggle=(id,visible)=>$(id).classList.toggle('hidden',!visible);
+const status=(id,message,error=false)=>{$(id).textContent=message;$(id).className='status '+(error?'error':'success')};
+let client, profile, departments=[], activities=[], currentUser=null;
+if(!configured){toggle('setup',true)}else{
+ client=createClient(cfg.url,cfg.publishableKey,{auth:{flowType:'implicit',detectSessionInUrl:true}});
+ async function loadUser(){
+  const {data:{user},error}=await client.auth.getUser(); currentUser=user;
+  toggle('login',!user);toggle('app',!!user);
+  if(!user)return;
+  $('who').textContent=user.email||'Signed-in staff';
+  const {data:staff,error:staffError}=await client.from('staff_profiles').select('user_id,full_name,email,is_quality_nominee').eq('user_id',user.id).maybeSingle();
+  if(staffError){toggle('not-approved',true);toggle('dashboard',false);$('not-approved').querySelector('p').textContent='Could not check staff permissions: '+staffError.message;return}
+  profile=staff;toggle('not-approved',!staff);toggle('dashboard',!!staff);
+  if(!staff)return;
+  $('role').textContent=staff.is_quality_nominee?'Quality Nominee · All departments':'Authorised department staff';
+  toggle('admin',staff.is_quality_nominee);
+  await loadActivities();
+ }
+ async function loadActivities(){
+  status('activity-message','Loading activities…');
+  const [d,a]=await Promise.all([client.from('departments').select('id,name').order('name'),client.from('btec_activities').select('id,department_id,title,description,due_date,is_completed,completed_at,completion_notes,completed_by').order('due_date',{ascending:true,nullsFirst:false})]);
+  if(d.error||a.error){status('activity-message',(d.error||a.error).message,true);return}
+  departments=d.data||[];activities=a.data||[];
+  const old=$('department-filter').value;
+  $('department-filter').replaceChildren(new Option('All authorised departments','all'));
+  $('add-department').replaceChildren();
+  for(const d of departments){$('department-filter').add(new Option(d.name,String(d.id)));$('add-department').add(new Option(d.name,String(d.id)))}
+  if([...$('department-filter').options].some(o=>o.value===old))$('department-filter').value=old;
+  status('activity-message','');render();
+ }
+ function render(){
+  const selected=$('department-filter').value, filter=$('status-filter').value;
+  const scope=activities.filter(a=>selected==='all'||String(a.department_id)===selected);
+  $('total').textContent=scope.length;$('completed').textContent=scope.filter(a=>a.is_completed).length;$('outstanding').textContent=scope.filter(a=>!a.is_completed).length;
+  const visible=scope.filter(a=>filter==='all'||(filter==='completed'?a.is_completed:!a.is_completed));
+  $('activity-list').replaceChildren();
+  if(!visible.length){const p=document.createElement('p');p.className='muted';p.textContent='No activities match this selection.';$('activity-list').append(p);return}
+  for(const a of visible){
+   const d=departments.find(d=>d.id===a.department_id);
+   const box=document.createElement('div');box.className='task';
+   const head=document.createElement('div');head.className='task-head';
+   const check=document.createElement('input');check.type='checkbox';check.checked=a.is_completed;check.setAttribute('aria-label','Mark '+a.title+' completed');
+   const title=document.createElement('strong');title.textContent=a.title;
+   head.append(check,title);box.append(head);
+   const meta=document.createElement('p');meta.className='small';meta.textContent=(d?.name||'Department')+' · Due: '+(a.due_date||'No deadline')+(a.completed_at?' · Completed: '+new Date(a.completed_at).toLocaleString('en-GB'):'');box.append(meta);
+   if(a.description){const desc=document.createElement('p');desc.textContent=a.description;box.append(desc)}
+   const notes=document.createElement('textarea');notes.placeholder='Completion notes (optional)';notes.value=a.completion_notes||'';notes.setAttribute('aria-label','Notes for '+a.title);box.append(notes);
+   const actions=document.createElement('div');actions.className='actions';const save=document.createElement('button');save.className='secondary';save.textContent='Save notes / status';const msg=document.createElement('span');msg.className='small';actions.append(save,msg);box.append(actions);
+   const saveTask=async()=>{save.disabled=true;check.disabled=true;msg.textContent='Saving…';const {error}=await client.from('btec_activities').update({is_completed:check.checked,completion_notes:notes.value}).eq('id',a.id);save.disabled=false;check.disabled=false;if(error){msg.textContent='Error: '+error.message;check.checked=a.is_completed}else{msg.textContent='Saved';await loadActivities()}};
+   save.addEventListener('click',saveTask);
+   $('activity-list').append(box);
+  }
+ }
+ $('department-filter').addEventListener('change',render);$('status-filter').addEventListener('change',render);$('refresh').addEventListener('click',loadActivities);
+ $('add-form').addEventListener('submit',async e=>{e.preventDefault();$('add-button').disabled=true;status('add-message','Saving…');const {error}=await client.rpc('create_btec_activity',{p_department_id:Number($('add-department').value),p_title:$('add-title').value.trim(),p_description:$('add-description').value.trim()||null,p_due_date:$('add-date').value||null});$('add-button').disabled=false;if(error){status('add-message',error.message,true)}else{status('add-message','Activity created.');$('add-title').value='';$('add-description').value='';$('add-date').value='';await loadActivities()}});
+ $('login-form').addEventListener('submit',async e=>{e.preventDefault();$('send').disabled=true;status('login-message','Sending login link…');const {error}=await client.auth.signInWithOtp({email:$('email').value.trim(),options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});$('send').disabled=false;status('login-message',error?'Could not send login link: '+error.message:'If this email has an approved account, a login link will arrive shortly.',!!error)});
+ $('sign-out').addEventListener('click',async()=>{await client.auth.signOut();profile=null;await loadUser()});
+ client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT')setTimeout(loadUser,0)});
+ await loadUser();
 }
 </script></body></html>
