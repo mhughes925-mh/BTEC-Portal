@@ -12,7 +12,7 @@
 <div id="not-approved" class="card hidden"><h2>Account not yet authorised</h2><p>Your email sign-in worked, but there is no authorised staff profile for this account. Contact the Quality Nominee.</p></div>
 <div id="dashboard" class="hidden">
 <div class="grid"><div class="card"><div class="muted">Total activities</div><div id="total" class="stat">0</div></div><div class="card"><div class="muted">Outstanding</div><div id="outstanding" class="stat">0</div></div><div class="card"><div class="muted">Completed</div><div id="completed" class="stat">0</div></div></div>
-<div class="card"><div class="bar"><h2>Department activities</h2><button id="refresh" class="secondary">Refresh</button></div><label for="department-filter">Department</label><select id="department-filter"></select><label for="status-filter">Status</label><select id="status-filter"><option value="all">All activities</option><option value="outstanding">Outstanding</option><option value="completed">Completed</option></select><p id="activity-message" class="status" role="status"></p><div id="activity-list"></div></div>
+<div class="card"><div class="bar"><h2>Choose a department</h2><button id="refresh" class="secondary">Refresh</button></div><p class="muted">Select a qualification to see its activities, deadlines and completion progress.</p><label for="department-filter">Department</label><select id="department-filter"></select><label for="status-filter">Status</label><select id="status-filter"><option value="all">All activities</option><option value="outstanding">Outstanding</option><option value="completed">Completed</option></select><p id="activity-message" class="status" role="status"></p><div id="activity-list"></div></div>
 <section id="admin" class="card hidden"><h2>Add BTEC activity</h2><p class="muted">Quality Nominee only. New activities will appear on the selected department's dashboard.</p><form id="add-form"><div class="grid two"><div><label for="add-department">Department</label><select id="add-department" required></select></div><div><label for="add-title">Activity title</label><input id="add-title" maxlength="200" required placeholder="e.g. Upload digital assessment plan"></div></div><label for="add-description">Instructions (optional)</label><textarea id="add-description" maxlength="3000"></textarea><label for="add-date">Deadline (optional)</label><input id="add-date" type="date"><div class="spacer"></div><button id="add-button" type="submit">Save activity</button></form><p id="add-message" class="status" role="status"></p></section>
 </div></section></main><footer>St Ciaran's College · BTEC Quality Assurance Portal · Testing version</footer>
 <script src="config.js"></script><script type="module">
@@ -43,14 +43,17 @@ if(!configured){toggle('setup',true)}else{
   if(d.error||a.error){status('activity-message',(d.error||a.error).message,true);return}
   departments=d.data||[];activities=a.data||[];
   const old=$('department-filter').value;
-  $('department-filter').replaceChildren(new Option('All authorised departments','all'));
+  $('department-filter').replaceChildren(new Option('— Select a department —',''));
+  if(profile.is_quality_nominee)$('department-filter').add(new Option('All departments (overview)','all'));
   $('add-department').replaceChildren();
   for(const d of departments){$('department-filter').add(new Option(d.name,String(d.id)));$('add-department').add(new Option(d.name,String(d.id)))}
-  if([...$('department-filter').options].some(o=>o.value===old))$('department-filter').value=old;
+  if(old && [...$('department-filter').options].some(o=>o.value===old))$('department-filter').value=old;
+  else if(!profile.is_quality_nominee && departments.length===1)$('department-filter').value=String(departments[0].id);
   status('activity-message','');render();
  }
  function render(){
   const selected=$('department-filter').value, filter=$('status-filter').value;
+  if(!selected){$('total').textContent='—';$('completed').textContent='—';$('outstanding').textContent='—';$('activity-list').replaceChildren();const p=document.createElement('p');p.className='muted';p.textContent='Choose a department above to view its activities.';$('activity-list').append(p);return}
   const scope=activities.filter(a=>selected==='all'||String(a.department_id)===selected);
   $('total').textContent=scope.length;$('completed').textContent=scope.filter(a=>a.is_completed).length;$('outstanding').textContent=scope.filter(a=>!a.is_completed).length;
   const visible=scope.filter(a=>filter==='all'||(filter==='completed'?a.is_completed:!a.is_completed));
