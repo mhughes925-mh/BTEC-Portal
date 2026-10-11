@@ -17,6 +17,7 @@
 <div class="card"><div class="bar"><h2>Choose a department</h2><button id="refresh" class="secondary">Refresh</button></div><p class="muted">Select a qualification to see its activities, deadlines and completion progress.</p><label for="department-filter">Department</label><select id="department-filter"></select><label for="status-filter">Status</label><select id="status-filter"><option value="all">All activities</option><option value="outstanding">Outstanding</option><option value="completed">Completed</option><option value="overdue">Overdue</option></select><p id="activity-message" class="status" role="status"></p><div id="activity-list"></div></div>
 <section id="admin" class="card hidden"><h2>Add BTEC activity</h2><p class="muted">Quality Nominee only. New activities will appear on the selected department's dashboard.</p><form id="add-form"><div class="grid two"><div><label for="add-department">Department</label><select id="add-department" required></select></div><div><label for="add-title">Activity title</label><input id="add-title" maxlength="200" required placeholder="e.g. Upload digital assessment plan"></div></div><label for="add-description">Instructions (optional)</label><textarea id="add-description" maxlength="3000"></textarea><label for="add-date">Deadline (optional)</label><input id="add-date" type="date"><div class="spacer"></div><button id="add-button" type="submit">Save activity</button></form><p id="add-message" class="status" role="status"></p></section>
 <section id="staff-admin" class="card hidden"><h2>Staff management</h2><p class="muted">Quality Nominee only. Assign approved staff to one or more BTEC departments. Staff accounts must first be created in Supabase Authentication and have an approved staff profile.</p><button id="staff-refresh" class="secondary" type="button">Refresh staff list</button><p id="staff-message" class="status" role="status"></p><label for="staff-select">Staff member</label><select id="staff-select"><option value="">— Select a staff member —</option></select><div id="staff-detail" class="hidden"><h3>Assigned departments</h3><div id="staff-assignments" class="staff-assignments"></div><form id="staff-assign-form"><label for="staff-add-department">Add a department</label><select id="staff-add-department" required></select><div class="spacer"></div><button id="staff-assign-button" type="submit">Assign department</button></form><p id="staff-action-message" class="status" role="status"></p></div></section>
+<section id="invitation-security" class="card hidden"><h2>Invitation security test</h2><p class="muted">Quality Nominee only. This checks your signed-in session against the invitation function. It does not create accounts or send emails.</p><button id="invitation-test" type="button">Test invitation security</button><p id="invitation-test-result" class="status" role="status"></p></section>
 </div></section></main><footer>St Ciaran's College · BTEC Quality Assurance Portal · Testing version</footer>
 <script src="config.js"></script><script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -39,6 +40,7 @@ if(!configured){toggle('setup',true)}else{
   $('role').textContent=staff.is_quality_nominee?'Quality Nominee · All departments':'Authorised department staff';
   toggle('admin',staff.is_quality_nominee);
   toggle('staff-admin',staff.is_quality_nominee);
+  toggle('invitation-security',staff.is_quality_nominee);
   await loadActivities();
   if(staff.is_quality_nominee)await loadStaff();
  }
@@ -147,6 +149,25 @@ if(!configured){toggle('setup',true)}else{
   $('staff-assign-button').disabled=!available.length;
   if(!available.length)$('staff-add-department').add(new Option('All departments assigned',''));
  }
+ $('invitation-test').addEventListener('click',async()=>{
+  const btn=$('invitation-test');btn.disabled=true;
+  status('invitation-test-result','Checking your signed-in account…');
+  try{
+   const {data:{session},error:sessionError}=await client.auth.getSession();
+   if(sessionError||!session?.access_token)throw new Error('No active login session.');
+   const {data,error}=await client.functions.invoke('invite-btec-staff',{body:{}});
+   if(error){
+    let detail=error.message||'Request failed';
+    const response=error.context;
+    if(response?.status)detail='HTTP '+response.status+': '+detail;
+    if(typeof response?.clone==='function'){
+     try{const body=await response.clone().json();if(body?.error||body?.message)detail+=' — '+(body.error||body.message)}catch{}
+    }
+    status('invitation-test-result','Function test unsuccessful: '+detail,true);
+   }else status('invitation-test-result',data?.message||'Function responded successfully.');
+  }catch(err){status('invitation-test-result','Function test unsuccessful: '+err.message,true)}
+  finally{btn.disabled=false}
+ });
  $('staff-select').addEventListener('change',renderStaff);
  $('staff-refresh').addEventListener('click',loadStaff);
  $('staff-assign-form').addEventListener('submit',async e=>{
