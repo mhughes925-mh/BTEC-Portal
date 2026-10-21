@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>St Ciaran's College | BTEC Portal</title>
+<style>
+:root{font-family:system-ui,Segoe UI,Arial,sans-serif;color:#193552;background:#eef4fa}*{box-sizing:border-box}body{margin:0}header{background:#123c70;color:white;padding:20px max(18px,calc((100% - 1050px)/2))}.brand{display:flex;align-items:center;gap:16px}.brand img{width:76px;background:white;border-radius:9px;padding:4px}.brand h1{font-size:23px;margin:0 0 5px}main{max-width:1050px;margin:26px auto;padding:0 18px}.card{background:white;border:1px solid #d5e3ef;border-radius:12px;padding:22px;margin-bottom:16px;box-shadow:0 4px 16px #183e6610}h2{margin:0 0 12px}h3{margin:0 0 10px}label{display:block;font-weight:600;margin:12px 0 5px}input,select,textarea{width:100%;padding:10px;border:1px solid #a9bfd4;border-radius:7px;font:inherit}textarea{min-height:85px}button{padding:10px 14px;background:#1760a6;color:white;border:0;border-radius:7px;font:inherit;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e4edf6;color:#123c70}.muted{color:#597086;font-size:14px;line-height:1.5}.notice{background:#fff4d7;border-left:4px solid #c69224;padding:12px;margin-bottom:18px}.status{white-space:pre-wrap}.error{color:#a32836}.success{color:#126a46}.hidden{display:none!important}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.grid.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.task{border:1px solid #d9e5ef;border-radius:9px;padding:14px;margin:10px 0}.task-head{display:flex;align-items:start;gap:10px}.task-head input{width:20px;height:20px;margin:3px 0}.task-head strong{flex:1}.task textarea{margin-top:9px;min-height:60px}.pill{display:inline-block;background:#e4edf6;border-radius:20px;padding:3px 10px;font-size:12px}.small{font-size:12px;color:#597086}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}.stat{font-size:28px;font-weight:700}.progress-track{height:13px;background:#e4edf6;border-radius:999px;overflow:hidden}.progress-fill{height:100%;background:#16846b;width:0%;transition:width .2s}.progress-meta{display:flex;justify-content:space-between;gap:10px;margin-bottom:9px;font-weight:600}.overdue-count{color:#ad303e}.overview-table{width:100%;border-collapse:collapse;margin-top:12px}.overview-table th,.overview-table td{padding:11px 8px;text-align:left;border-bottom:1px solid #d9e5ef}.overview-table th{font-size:13px;color:#597086}.overview-table button{background:transparent;color:#1760a6;padding:3px;text-align:left;font-weight:600}.overview-table td:last-child,.overview-table th:last-child{text-align:right}.table-wrap{overflow-x:auto}.staff-assignments{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.assignment-chip{display:inline-flex;align-items:center;gap:9px;border:1px solid #bfd2e4;background:#f0f6fb;border-radius:20px;padding:6px 8px 6px 12px}.assignment-chip button{padding:4px 9px;background:#fff;color:#a32836;border:1px solid #d7aeb2;font-size:12px}.staff-hint{margin-top:6px}footer{text-align:center;color:#597086;font-size:12px;margin:24px}.spacer{height:8px}
+</style></head><body>
+<header><div class="brand"><img src="school-crest.png" alt="St Ciaran's College crest"><div><h1>St Ciaran's College</h1><div>BTEC Quality Assurance Portal</div></div></div></header>
+<main>
+<section id="setup" class="card hidden"><h2>Supabase configuration needed</h2><p>Add your API URL and publishable key to <code>config.js</code>, then upload it alongside this page. Never use a secret or service_role key.</p></section>
+<section id="login" class="card hidden"><h2>Staff sign in</h2><p class="muted">Enter your approved school email and personal access code. No verification email is needed for access-code accounts.</p><form id="login-form"><label for="email">School email address</label><input id="email" type="email" autocomplete="username" required placeholder="name@c2ken.net"><label for="access-code">Personal access code</label><input id="access-code" type="password" autocomplete="current-password" minlength="12" required placeholder="Enter your access code"><div class="spacer"></div><button id="send" type="submit">Sign in</button></form><p id="login-message" class="status" role="status" aria-live="polite"></p><details style="margin-top:16px"><summary style="cursor:pointer;font-weight:600;color:#1760a6">Existing account? Use original email sign-in link</summary><p class="muted">Your original email sign-in remains available during testing.</p><button type="button" class="secondary" id="email-link-button">Send original sign-in link</button></details><div class="notice" style="margin-top:16px"><strong>Shared computer?</strong><div class="muted">Sign out when finished. Keep your access code private. Your usual device may remember your session.</div></div></section>
+<section id="app" class="hidden">
+<div class="card bar"><div><strong id="who"></strong><div class="muted" id="role"></div><div class="small">On a shared computer? Sign out when finished.</div></div><button class="secondary" id="sign-out">Sign out</button></div>
+<div id="not-approved" class="card hidden"><h2>Account not yet authorised</h2><p>Your sign-in worked, but there is no authorised staff profile for this account. Contact the Quality Nominee.</p></div>
+<div id="dashboard" class="hidden">
+<div class="grid"><div class="card"><div class="muted">Total activities</div><div id="total" class="stat">—</div></div><div class="card"><div class="muted">Completed</div><div id="completed" class="stat">—</div></div><div class="card"><div class="muted">Outstanding</div><div id="outstanding" class="stat">—</div></div><div class="card"><div class="muted">Overdue</div><div id="overdue" class="stat overdue-count">—</div></div></div>
+<div id="progress-panel" class="card hidden"><div class="progress-meta"><span id="progress-label">Completion progress</span><span id="progress-percent">0%</span></div><div class="progress-track" role="progressbar" aria-label="Activity completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track"><div id="progress-fill" class="progress-fill"></div></div><p class="muted" id="progress-detail"></p></div>
+<div id="overview-panel" class="card hidden"><h2>Progress by department</h2><p class="muted">Select a department name to view its activities.</p><div id="overview-table" class="table-wrap"></div></div>
+<div class="card"><div class="bar"><h2>Choose a department</h2><button id="refresh" class="secondary">Refresh</button></div><p class="muted">Select a qualification to see its activities, deadlines and completion progress.</p><label for="department-filter">Department</label><select id="department-filter"></select><label for="status-filter">Status</label><select id="status-filter"><option value="all">All activities</option><option value="outstanding">Outstanding</option><option value="completed">Completed</option><option value="overdue">Overdue</option></select><p id="activity-message" class="status" role="status"></p><div id="activity-list"></div></div>
+<section id="admin" class="card hidden"><h2>Add BTEC activity</h2><p class="muted">Quality Nominee only. New activities will appear on the selected department's dashboard.</p><form id="add-form"><div class="grid two"><div><label for="add-department">Department</label><select id="add-department" required></select></div><div><label for="add-title">Activity title</label><input id="add-title" maxlength="200" required placeholder="e.g. Upload digital assessment plan"></div></div><label for="add-description">Instructions (optional)</label><textarea id="add-description" maxlength="3000"></textarea><label for="add-date">Deadline (optional)</label><input id="add-date" type="date"><div class="spacer"></div><button id="add-button" type="submit">Save activity</button></form><p id="add-message" class="status" role="status"></p></section>
+<section id="staff-admin" class="card hidden"><h2>Staff management</h2><p class="muted">Quality Nominee only. Assign approved staff to one or more BTEC departments. Staff accounts must first be created in Supabase Authentication and have an approved staff profile.</p><button id="staff-refresh" class="secondary" type="button">Refresh staff list</button><p id="staff-message" class="status" role="status"></p><label for="staff-select">Staff member</label><select id="staff-select"><option value="">— Select a staff member —</option></select><div id="staff-detail" class="hidden"><h3>Assigned departments</h3><div id="staff-assignments" class="staff-assignments"></div><form id="staff-assign-form"><label for="staff-add-department">Add a department</label><select id="staff-add-department" required></select><div class="spacer"></div><button id="staff-assign-button" type="submit">Assign department</button></form><p id="staff-action-message" class="status" role="status"></p></div>
+<div class="task" id="invite-preview-panel"><h3>Invite new staff member</h3><p class="muted">Quality Nominee only. First validate the details with Supabase. Invitations remain disabled until the school's approved email service is configured and the administrator explicitly enables them.</p><form id="invite-preview-form"><label for="invite-full-name">Staff member's full name</label><input id="invite-full-name" maxlength="150" autocomplete="off" required placeholder="e.g. Jane Smith"><label for="invite-email">C2k staff email address</label><input id="invite-email" type="email" maxlength="254" autocomplete="off" required placeholder="name@c2ken.net"><label for="invite-department">BTEC department</label><select id="invite-department" required></select><div class="spacer"></div><div class="actions"><button type="submit" id="invite-preview-button">Validate invitation</button><button type="button" id="invite-send-button" disabled>Send invitation</button></div></form><p id="invite-preview-result" class="status" role="status" aria-live="polite"></p></div></section>
+</div></section></main><footer>St Ciaran's College · BTEC Quality Assurance Portal · Access-code test version</footer>
+<script src="config.js"></script><script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const $=id=>document.getElementById(id), cfg=window.BTEC_CONFIG||{};
+const configured=/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(cfg.url||'') && !!cfg.publishableKey && !cfg.publishableKey.includes('PASTE_');
+const toggle=(id,visible)=>$(id).classList.toggle('hidden',!visible);
+const status=(id,message,error=false)=>{$(id).textContent=message;$(id).className='status '+(error?'error':'success')};
+let client, profile, departments=[], activities=[], currentUser=null, staffMembers=[], staffAssignments=[];
+if(!configured){toggle('setup',true)}else{
+ client=createClient(cfg.url,cfg.publishableKey,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,storageKey:'stciarans-btec-portal-auth'}});
+ async function loadUser(){
+  const {data:{user},error}=await client.auth.getUser(); currentUser=user;
+  toggle('login',!user);toggle('app',!!user);
+  if(!user)return;
+  $('who').textContent=user.email||'Signed-in staff';
+  const {data:staff,error:staffError}=await client.from('staff_profiles').select('user_id,full_name,email,is_quality_nominee').eq('user_id',user.id).maybeSingle();
+  if(staffError){toggle('not-approved',true);toggle('dashboard',false);$('not-approved').querySelector('p').textContent='Could not check staff permissions: '+staffError.message;return}
+  profile=staff;toggle('not-approved',!staff);toggle('dashboard',!!staff);
+  if(!staff)return;
+  $('role').textContent=staff.is_quality_nominee?'Quality Nominee · All departments':'Authorised department staff';
+  toggle('admin',staff.is_quality_nominee);
+  toggle('staff-admin',staff.is_quality_nominee);
+  await loadActivities();
+  if(staff.is_quality_nominee)await loadStaff();
+ }
+ async function loadActivities(){
+  status('activity-message','Loading activities…');
+  const [d,a]=await Promise.all([client.from('departments').select('id,name').order('name'),client.from('btec_activities').select('id,department_id,title,description,due_date,is_completed,completed_at,completion_notes,completed_by').order('due_date',{ascending:true,nullsFirst:false})]);
+  if(d.error||a.error){status('activity-message',(d.error||a.error).message,true);return}
+  departments=d.data||[];activities=a.data||[];
+  const old=$('department-filter').value;
+  $('department-filter').replaceChildren(new Option('— Select a department —',''));
+  if(profile.is_quality_nominee)$('department-filter').add(new Option('All departments (overview)','all'));
+  $('invite-department').replaceChildren(new Option('— Select a department —',''));
+  $('add-department').replaceChildren();
+  for(const d of departments){$('department-filter').add(new Option(d.name,String(d.id)));$('add-department').add(new Option(d.name,String(d.id)));$('invite-department').add(new Option(d.name,String(d.id)))}
+  if(old && [...$('department-filter').options].some(o=>o.value===old))$('department-filter').value=old;
+  else if(!profile.is_quality_nominee && departments.length===1)$('department-filter').value=String(departments[0].id);
+  status('activity-message','');render();
+ }
+  function isOverdue(a){
+   if(a.is_completed||!a.due_date)return false;
+   // Compare date-only strings in local calendar time; a deadline becomes overdue the following day.
+   const today=new Date(),todayLocal=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+   return a.due_date<todayLocal;
+  }
+  function render(){
+   const selected=$('department-filter').value, filter=$('status-filter').value;
+   toggle('progress-panel',!!selected);toggle('overview-panel',selected==='all'&&!!profile?.is_quality_nominee);
+   if(!selected){for(const id of ['total','completed','outstanding','overdue'])$(id).textContent='—';$('activity-list').replaceChildren();const p=document.createElement('p');p.className='muted';p.textContent='Choose a department above to view its activities.';$('activity-list').append(p);return}
+   const scope=activities.filter(a=>selected==='all'||String(a.department_id)===selected);
+   const complete=scope.filter(a=>a.is_completed).length, outstanding=scope.length-complete, overdue=scope.filter(isOverdue).length;
+   const percentage=scope.length?Math.round(100*complete/scope.length):0;
+   $('total').textContent=scope.length;$('completed').textContent=complete;$('outstanding').textContent=outstanding;$('overdue').textContent=overdue;
+   $('progress-percent').textContent=percentage+'%';$('progress-fill').style.width=percentage+'%';$('progress-track').setAttribute('aria-valuenow',String(percentage));
+   $('progress-label').textContent=selected==='all'?'Overall completion progress':'Department completion progress';
+   $('progress-detail').textContent=complete+' of '+scope.length+' activities completed. '+overdue+' overdue (incomplete activities past their due date).';
+   if(selected==='all'&&profile?.is_quality_nominee){
+    const wrap=$('overview-table');wrap.replaceChildren();const table=document.createElement('table');table.className='overview-table';
+    const thead=document.createElement('thead'),hr=document.createElement('tr');for(const name of ['Department','Completed','Outstanding','Overdue','Progress']){const th=document.createElement('th');th.textContent=name;hr.append(th)}thead.append(hr);table.append(thead);
+    const tbody=document.createElement('tbody');for(const d of departments){const rows=activities.filter(a=>a.department_id===d.id),done=rows.filter(a=>a.is_completed).length,late=rows.filter(isOverdue).length,tr=document.createElement('tr');
+     const td=document.createElement('td'),btn=document.createElement('button');btn.type='button';btn.textContent=d.name;btn.addEventListener('click',()=>{$('department-filter').value=String(d.id);render();$('department-filter').scrollIntoView({behavior:'smooth',block:'center'})});td.append(btn);tr.append(td);
+     for(const value of [done,rows.length-done,late,(rows.length?Math.round(done/rows.length*100):0)+'%']){const cell=document.createElement('td');cell.textContent=String(value);tr.append(cell)}tbody.append(tr)
+    }table.append(tbody);wrap.append(table);
+   }
+  const visible=scope.filter(a=>filter==='all'||(filter==='completed'?a.is_completed:filter==='overdue'?isOverdue(a):!a.is_completed));
+  $('activity-list').replaceChildren();
+  if(!visible.length){const p=document.createElement('p');p.className='muted';p.textContent='No activities match this selection.';$('activity-list').append(p);return}
+  for(const a of visible){
+   const d=departments.find(d=>d.id===a.department_id);
+   const box=document.createElement('div');box.className='task';
+   const head=document.createElement('div');head.className='task-head';
+   const check=document.createElement('input');check.type='checkbox';check.checked=a.is_completed;check.setAttribute('aria-label','Mark '+a.title+' completed');
+   const title=document.createElement('strong');title.textContent=a.title;
+   head.append(check,title);box.append(head);
+   const meta=document.createElement('p');meta.className='small';meta.textContent=(d?.name||'Department')+' · Due: '+(a.due_date||'No deadline')+(a.completed_at?' · Completed: '+new Date(a.completed_at).toLocaleString('en-GB'):'')+(isOverdue(a)?' · OVERDUE':'');box.append(meta);
+   if(a.description){const desc=document.createElement('p');desc.textContent=a.description;box.append(desc)}
+   const notes=document.createElement('textarea');notes.placeholder='Completion notes (optional)';notes.value=a.completion_notes||'';notes.setAttribute('aria-label','Notes for '+a.title);box.append(notes);
+   const actions=document.createElement('div');actions.className='actions';const save=document.createElement('button');save.className='secondary';save.textContent='Save notes / status';const msg=document.createElement('span');msg.className='small';actions.append(save,msg);box.append(actions);
+   const saveTask=async()=>{save.disabled=true;check.disabled=true;msg.textContent='Saving…';const {error}=await client.from('btec_activities').update({is_completed:check.checked,completion_notes:notes.value}).eq('id',a.id);save.disabled=false;check.disabled=false;if(error){msg.textContent='Error: '+error.message;check.checked=a.is_completed}else{msg.textContent='Saved';await loadActivities()}};
+   save.addEventListener('click',saveTask);
+   $('activity-list').append(box);
+  }
+ }
+ async function loadStaff(){
+  if(!profile?.is_quality_nominee)return;
+  status('staff-message','Loading approved staff…');
+  const [people,links]=await Promise.all([
+   client.from('staff_profiles').select('user_id,full_name,email,is_quality_nominee').order('full_name'),
+   client.from('staff_departments').select('user_id,department_id')
+  ]);
+  if(people.error||links.error){status('staff-message','Unable to load staff: '+(people.error||links.error).message,true);return}
+  staffMembers=people.data||[];staffAssignments=links.data||[];
+  const previous=$('staff-select').value;
+  $('staff-select').replaceChildren(new Option('— Select a staff member —',''));
+  for(const person of staffMembers){
+   const name=(person.full_name||person.email||'Unnamed staff')+(person.is_quality_nominee?' (Quality Nominee)':'');
+   $('staff-select').add(new Option(name,person.user_id));
+  }
+  if(staffMembers.some(p=>p.user_id===previous))$('staff-select').value=previous;
+  status('staff-message',staffMembers.length+' approved staff profile(s) loaded.');
+  renderStaff();
+ }
+ function renderStaff(){
+  const userId=$('staff-select').value;
+  toggle('staff-detail',!!userId);
+  $('staff-assignments').replaceChildren();
+  $('staff-add-department').replaceChildren();
+  status('staff-action-message','');
+  if(!userId)return;
+  const assignedIds=new Set(staffAssignments.filter(a=>a.user_id===userId).map(a=>String(a.department_id)));
+  const assigned=departments.filter(d=>assignedIds.has(String(d.id)));
+  if(!assigned.length){const note=document.createElement('p');note.className='muted';note.textContent='No departments assigned yet.';$('staff-assignments').append(note)}
+  for(const dept of assigned){
+   const chip=document.createElement('span');chip.className='assignment-chip';
+   const name=document.createElement('span');name.textContent=dept.name;
+   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove';remove.setAttribute('aria-label','Remove '+dept.name+' assignment');
+   remove.addEventListener('click',async()=>{
+    if(!confirm('Remove '+dept.name+' from this staff member?'))return;
+    remove.disabled=true;status('staff-action-message','Removing assignment…');
+    const {error}=await client.rpc('remove_staff_department',{p_user_id:userId,p_department_id:dept.id});
+    if(error){remove.disabled=false;status('staff-action-message','Could not remove assignment: '+error.message,true)}
+    else{await loadStaff();status('staff-action-message','Department assignment removed.')}
+   });
+   chip.append(name,remove);$('staff-assignments').append(chip);
+  }
+  const available=departments.filter(d=>!assignedIds.has(String(d.id)));
+  for(const dept of available)$('staff-add-department').add(new Option(dept.name,String(dept.id)));
+  $('staff-assign-button').disabled=!available.length;
+  if(!available.length)$('staff-add-department').add(new Option('All departments assigned',''));
+ }
+ // Invitation actions are enforced by the Edge Function, not just by hiding this section.
+ let validatedInvitation=null;
+ const inviteFields=['invite-full-name','invite-email','invite-department'];
+ function invitationDetails(){
+  return {full_name:$('invite-full-name').value.trim(),email:$('invite-email').value.trim().toLowerCase(),department_id:Number($('invite-department').value)};
+ }
+ function resetInvitationValidation(){
+  validatedInvitation=null;$('invite-send-button').disabled=true;
+  status('invite-preview-result','');
+ }
+ for(const id of inviteFields)$(id).addEventListener(id==='invite-department'?'change':'input',resetInvitationValidation);
+ async function callInvitationFunction(payload){
+  const {data,error}=await client.functions.invoke('invite-btec-staff',{body:payload});
+  if(error){
+   let detail=error.message||'Request failed';const response=error.context;
+   if(response?.status)detail='HTTP '+response.status+': '+detail;
+   if(typeof response?.clone==='function'){
+    try{const body=await response.clone().json();if(body?.error||body?.message)detail+=' — '+(body.error||body.message)}catch{}
+   }
+   throw new Error(detail);
+  }
+  return data;
+ }
+ $('invite-preview-form').addEventListener('submit',async e=>{
+  e.preventDefault();resetInvitationValidation();
+  if(!profile?.is_quality_nominee){status('invite-preview-result','Not authorised.',true);return}
+  const details=invitationDetails();
+  if(!details.full_name||!details.email.endsWith('@c2ken.net')||!Number.isSafeInteger(details.department_id)||details.department_id<=0){
+   status('invite-preview-result','Enter a full name, an @c2ken.net email address and a department.',true);return;
+  }
+  $('invite-preview-button').disabled=true;status('invite-preview-result','Checking invitation details securely…');
+  try{
+   const result=await callInvitationFunction({action:'validate',...details});
+   if(!result?.success)throw new Error('Validation was not confirmed.');
+   validatedInvitation=details;
+   const dept=departments.find(d=>d.id===details.department_id);
+   const ready=result.enabled===true;
+   $('invite-send-button').disabled=!ready;
+   status('invite-preview-result','Details validated by Supabase.\nName: '+details.full_name+'\nEmail: '+details.email+'\nDepartment: '+(dept?.name||'Unknown')+'\n'+(ready?'Invitations enabled. Review the details and click Send invitation to proceed.':'Invitations currently disabled pending school IT approval. No email sent or account created.'));
+  }catch(err){status('invite-preview-result','Validation unsuccessful: '+err.message,true)}
+  finally{$('invite-preview-button').disabled=false}
+ });
+ $('invite-send-button').addEventListener('click',async()=>{
+  if(!profile?.is_quality_nominee||!validatedInvitation)return;
+  const details=invitationDetails();
+  if(JSON.stringify(details)!==JSON.stringify(validatedInvitation)){resetInvitationValidation();status('invite-preview-result','Details changed. Validate again.',true);return}
+  const dept=departments.find(d=>d.id===details.department_id);
+  if(!confirm('Send an invitation to '+details.email+' for '+(dept?.name||'the selected department')+'?'))return;
+  $('invite-send-button').disabled=true;$('invite-preview-button').disabled=true;
+  status('invite-preview-result','Requesting invitation…');
+  try{
+   const result=await callInvitationFunction({action:'send',...details});
+   if(!result?.success)throw new Error('The invitation was not confirmed.');
+   validatedInvitation=null;
+   $('invite-preview-form').reset();
+   status('invite-preview-result',result.message||'Invitation sent.');
+   await loadStaff();
+  }catch(err){validatedInvitation=null;status('invite-preview-result','Invitation not confirmed: '+err.message+'\nIf the server reports incomplete setup, check Supabase before trying again.',true)}
+  finally{$('invite-preview-button').disabled=false}
+ });
+ $('staff-select').addEventListener('change',renderStaff);
+ $('staff-refresh').addEventListener('click',loadStaff);
+ $('staff-assign-form').addEventListener('submit',async e=>{
+  e.preventDefault();const userId=$('staff-select').value,departmentId=Number($('staff-add-department').value);
+  if(!userId||!departmentId)return;
+  $('staff-assign-button').disabled=true;status('staff-action-message','Assigning department…');
+  const {error}=await client.rpc('assign_staff_department',{p_user_id:userId,p_department_id:departmentId});
+  if(error){$('staff-assign-button').disabled=false;status('staff-action-message','Could not assign department: '+error.message,true)}
+  else{await loadStaff();status('staff-action-message','Department assigned successfully.')}
+ });
+ $('department-filter').addEventListener('change',render);$('status-filter').addEventListener('change',render);$('refresh').addEventListener('click',loadActivities);
+ $('add-form').addEventListener('submit',async e=>{e.preventDefault();$('add-button').disabled=true;status('add-message','Saving…');const {error}=await client.rpc('create_btec_activity',{p_department_id:Number($('add-department').value),p_title:$('add-title').value.trim(),p_description:$('add-description').value.trim()||null,p_due_date:$('add-date').value||null});$('add-button').disabled=false;if(error){status('add-message',error.message,true)}else{status('add-message','Activity created.');$('add-title').value='';$('add-description').value='';$('add-date').value='';await loadActivities()}});
+ $('login-form').addEventListener('submit',async e=>{e.preventDefault();const email=$('email').value.trim().toLowerCase(),password=$('access-code').value;$('send').disabled=true;status('login-message','Signing in securely…');try{const {error}=await client.auth.signInWithPassword({email,password});$('access-code').value='';if(error)status('login-message','Sign-in unsuccessful. Check your email and access code, or contact the Quality Nominee.',true);else{status('login-message','Signed in successfully.');await loadUser()}}catch(err){$('access-code').value='';status('login-message','Unable to sign in. Check your connection and try again.',true)}finally{$('send').disabled=false}});
+ $('email-link-button').addEventListener('click',async()=>{const email=$('email').value.trim().toLowerCase();if(!email){status('login-message','Enter your school email address first.',true);return}$('email-link-button').disabled=true;status('login-message','Requesting original sign-in link…');try{const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:false}});status('login-message',error?'Could not send link: '+error.message:'If this account is authorised and email delivery is available, a sign-in link will arrive shortly.',!!error)}catch(err){status('login-message','Unable to request a sign-in link.',true)}finally{$('email-link-button').disabled=false}});
+ $('sign-out').addEventListener('click',async()=>{const {error}=await client.auth.signOut();if(error){alert('Sign-out failed: '+error.message);return;}profile=null;await loadUser();status('login-message','You have signed out of this browser.');});
+ client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_IN'||event==='SIGNED_OUT')setTimeout(loadUser,0)});
+ await loadUser();
+}
+</script></body></html>
